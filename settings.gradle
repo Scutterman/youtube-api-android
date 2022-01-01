@@ -8,5 +8,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Youtube Vog Thumbnail Creator"
+rootProject.name = "Youtube Api Android Sample"
 include ':app'

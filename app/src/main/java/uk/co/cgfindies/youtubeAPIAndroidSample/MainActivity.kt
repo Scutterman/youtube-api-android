@@ -44,11 +44,11 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             doAuth()
         }
 
-        val upload = findViewById<Button>(R.id.btn_upload_video)
-        upload.setOnClickListener {
-            upload.isEnabled = false
+        val list = findViewById<Button>(R.id.btn_list_videos)
+        list.setOnClickListener {
+            list.isEnabled = false
             showChannels()
-            upload.isEnabled = true
+            list.isEnabled = true
         }
 
         val resetCredentials = findViewById<Button>(R.id.btn_reset_credentials)
@@ -60,10 +60,8 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         Utility.getAuthentication(this) { auth ->
             if (auth == null) {
                 showAuth()
-                doAuth()
             } else {
                 showResults()
-                showChannels()
             }
         }
     }
@@ -75,7 +73,9 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
     override fun onStart(owner: LifecycleOwner) {
         // app moved to foreground
+        Log.i("onStart", "Resuming: $tokenId")
         if (tokenId == null) {
+            Log.i("onStart", "No token id, nothing to do")
             return
         }
         val url = getString(R.string.auth_api_url)
@@ -111,11 +111,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         findViewById<View>(R.id.not_a_token).visibility = View.GONE
         findViewById<View>(R.id.results).visibility = View.GONE
         findViewById<View>(R.id.auth).visibility = View.VISIBLE
+        doAuth()
     }
 
     private fun showResults() {
+        Log.i("onStart", "Resuming: $tokenId")
         findViewById<View>(R.id.auth).visibility = View.GONE
         findViewById<View>(R.id.results).visibility = View.VISIBLE
+        showChannels()
     }
 
     private fun showError() {
@@ -123,7 +126,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     private fun setOutputText(text: String) {
-        this.findViewById<TextView>(R.id.upload_output).text = text
+        this.findViewById<TextView>(R.id.api_output).text = text
     }
 
     private fun populateVideoList(videos: MutableList<PlaylistItem>) {
@@ -158,17 +161,17 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     private fun showChannels() {
-        Log.i("UPLOAD", "Showing channels")
+        Log.i("YOUTUBE_API", "Showing channels")
         setOutputText("")
 
         getChannelList { channels ->
             if (channels == null || channels.isEmpty()) {
-                Log.i("UPLOAD", "No results")
+                Log.i("YOUTUBE_API", "No results")
                 Utility.showMessage(this, R.string.no_results)
             } else {
-                Log.i("UPLOAD", "Got data")
+                Log.i("YOUTUBE_API", "Got data")
                 val channelSummary = channels.map { channel ->
-                    resources.getString(R.string.upload_channel_description, channel.snippet.title, channel.statistics.viewCount)
+                    resources.getString(R.string.channel_description, channel.snippet.title, channel.statistics.viewCount)
                 }
 
 
@@ -181,29 +184,29 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     private fun getChannelList(onResult: (List<Channel>?) -> Unit) {
-        Log.i("UPLOAD", "Performing channel list action")
+        Log.i("YOUTUBE_API", "Performing channel list action")
         MakeRequestTask<List<Channel>>({ apiClient ->
-            Log.i("UPLOAD", "data from api")
+            Log.i("YOUTUBE_API", "data from api")
             val result = apiClient.channels().list("snippet,contentDetails,statistics")
                 .setMine(true)
                 .execute()
 
-            Log.i("UPLOAD", "Got channels ${result.items?.size ?: 0}")
+            Log.i("YOUTUBE_API", "Got channels ${result.items?.size ?: 0}")
             return@MakeRequestTask result.items?.toList() ?: emptyList()
         }, onResult).execute()
-        Log.i("UPLOAD", "Executed channel list item")
+        Log.i("YOUTUBE_API", "Executed channel list item")
     }
 
     private fun getPlaylistVideos(playlistId: String) {
-        Log.i("UPLOAD", "Performing video list action")
+        Log.i("YOUTUBE_API", "Performing video list action")
         MakeRequestTask<List<PlaylistItem>>({ apiClient ->
-            Log.i("UPLOAD", "data from api")
+            Log.i("YOUTUBE_API", "data from api")
             val result = apiClient.playlistItems().list("snippet,contentDetails,status")
                 .setPlaylistId(playlistId)
                 .setMaxResults(10)
                 .execute()
 
-            Log.i("UPLOAD", "Got channels ${result.items?.size ?: 0}")
+            Log.i("YOUTUBE_API", "Got channels ${result.items?.size ?: 0}")
             return@MakeRequestTask result.items?.toList() ?: emptyList()
         }, { items ->
             if (items == null || items.isEmpty()) {
@@ -214,7 +217,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
                 populateVideoList(items.toMutableList())
             }
         }).execute()
-        Log.i("UPLOAD", "Executed video list action")
+        Log.i("YOUTUBE_API", "Executed video list action")
     }
 
     /**
@@ -234,61 +237,61 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
          */
         override fun doInBackground(vararg params: Void?): Result? {
             return try {
-                Log.i("UPLOAD", "Setting up the api client")
+                Log.i("YOUTUBE_API", "Setting up the api client")
                 val transport = AndroidHttp.newCompatibleTransport()
                 val jsonFactory: JsonFactory = JacksonFactory.getDefaultInstance()
                 val apiClient = YouTube.Builder(transport, jsonFactory, this)
                     .setApplicationName("YouTube API Android Sample")
                     .build()
-                Log.i("UPLOAD", "Trying to get the data")
+                Log.i("YOUTUBE_API", "Trying to get the data")
                 fetchData(apiClient)
             } catch (e: Exception) {
-                Log.e("UPLOAD", "do background error", e)
+                Log.e("YOUTUBE_API", "do background error", e)
                 cancel(true, e)
                 null
             }
         }
 
         override suspend fun onPreExecute(): Unit = suspendCoroutine { cont ->
-            Log.i("UPLOAD", "Pre execute")
+            Log.i("YOUTUBE_API", "Pre execute")
             Utility.getAuthentication(this@MainActivity) { auth ->
-                Log.i("UPLOAD", "Fetched auth")
+                Log.i("YOUTUBE_API", "Fetched auth")
                 this.auth = auth
-                Log.i("UPLOAD", "Resuming task flow")
+                Log.i("YOUTUBE_API", "Resuming task flow")
                 cont.resume(Unit)
             }
         }
 
         override fun onPostExecute(result: Result?) {
-            Log.i("UPLOAD", "Post execute")
+            Log.i("YOUTUBE_API", "Post execute")
             onResult(result)
         }
 
         override fun onCancelled(e: java.lang.Exception?) {
-            Log.i("UPLOAD", "Cancelled")
+            Log.i("YOUTUBE_API", "Cancelled")
             if (e != null) {
-                Log.e("UPLOAD", "Error while uploading", e)
-                Utility.showMessage(this@MainActivity, R.string.error_uploading)
+                Log.e("YOUTUBE_API", "Error while making API request", e)
+                Utility.showMessage(this@MainActivity, R.string.error_api_request)
             } else {
-                Utility.showMessage(this@MainActivity, R.string.upload_cancelled)
+                Utility.showMessage(this@MainActivity, R.string.api_request_cancelled)
             }
         }
 
         override fun initialize(request: HttpRequest?) {
-            Log.i("UPLOAD", "Initializing the request")
+            Log.i("YOUTUBE_API", "Initializing the request")
             if (request == null) {
-                Log.i("UPLOAD", "No request, nothing to do")
+                Log.i("YOUTUBE_API", "No request, nothing to do")
                 return
             }
 
-            Log.i("UPLOAD", "Checking the auth")
+            Log.i("YOUTUBE_API", "Checking the auth")
             val auth = this.auth ?: throw Exception("Set authentication before running a request")
 
-            Log.i("UPLOAD", "Setting request handler")
+            Log.i("YOUTUBE_API", "Setting request handler")
             val handler = RequestHandler(auth)
             request.interceptor = handler
             request.unsuccessfulResponseHandler = handler
-            Log.i("UPLOAD", "Initialize complete")
+            Log.i("YOUTUBE_API", "Initialize complete")
         }
     }
 
@@ -296,14 +299,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         HttpUnsuccessfulResponseHandler {
 
         override fun intercept(request: HttpRequest) {
-            Log.i("UPLOAD", "Intercepted the request, adding an access token")
+            Log.i("YOUTUBE_API", "Intercepted the request, adding an access token")
             request.headers.authorization = "Bearer ${ auth.access_token }"
         }
 
         override fun handleResponse(
             request: HttpRequest, response: HttpResponse, supportsRetry: Boolean
         ): Boolean {
-            Log.i("UPLOAD", "Request failed with the status" + response.statusCode.toString())
+            Log.i("YOUTUBE_API", "Request failed with the status" + response.statusCode.toString())
             // If the response was 401, the problem should be solved by the user retrying
             // Otherwise, we can't fix it anyway
             return false

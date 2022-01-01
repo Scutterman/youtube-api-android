@@ -1,46 +1,16 @@
 <resources>
-    <string name="app_name">Youtube Vog Thumbnail Creator</string>
-    <string name="pick_video">Pick\nVideo</string>
-    <string name="selected_image_description">This box will contain the chosen image once a video has been processed. Tap to set the title text</string>
-    <string name="request_external_read_permission">We need to load the video you select in order to turn it into a thumbnail image</string>
-    <string name="request_external_write_permission">We need your permission to save the image</string>
-    <string name="stop_processing">Stop\nProcessing</string>
-    <string name="thumbnail_title_text_hint">Tap the preview image to set the title text</string>
-    <string name="save_thumbnail">Save\nThumbnail</string>
-    <string name="thumbnail_saved">Thumbnail Saved!</string>
-    <string name="no_video_track_found">Could not process the video</string>
-    <string name="pick_profile">Pick Profile</string>
-    <string name="add_profile">Add Profile</string>
-    <string name="overlay_preview">Overlay preview</string>
-    <string name="delete_profile">Delete Profile</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="profile_name">Profile Name</string>
-    <string name="profile_thumbnail_background">Thumbnail Background (click to select)</string>
-    <string name="profile_thumbnail_face_left">Left</string>
-    <string name="profile_thumbnail_face_right">Right</string>
-    <string name="profile_thumbnail_face_top">Top</string>
-    <string name="profile_thumbnail_face_bottom">Bottom</string>
-    <string name="profile_save">Save Profile</string>
-    <string name="profile_add_face_bounds_explanation">Enter the values for the area where the face will be placed on the background</string>
-    <string name="upload_video">Upload Video</string>
+    <string name="app_name">Youtube Api Android Sample</string>
+    <string name="view_videos">View Latest Videos</string>
     <string name="reset_credentials">Reset Credentials</string>
-
-    <string name="network_unavailable">No network connection available</string>
     <string name="no_results">No results returned</string>
-    <string name="error_uploading">"Error while uploading"</string>
-    <string name="upload_cancelled">Request cancelled.</string>
-    <string name="requires_google_play_services">This app requires Google Play Services. Please install Google Play Services on your device and relaunch this app.</string>
-    <string name="go_to_uploads">Go to Uploads</string>
-
-    <string name="request_accounts_permission_message">This app needs to access your Google account (via Contacts) to display your Youtube channels.</string>
+    <string name="error_api_request">"Error while making the API request"</string>
+    <string name="api_request_cancelled">Request cancelled.</string>
     <string name="fragment_auth_no_auth_url">Could not authenticate with google</string>
     <string name="fragment_auth_complete_auth_instructions">A browser will open asking you to authenticate with Youtube. Once you\'ve finished that process, you\'ll be asked to return to the app and the rest of the process should happen automatically.</string>
     <string name="fragment_auth_retry_authentication_button">Retry Authentication</string>
-    <string name="fragment_auth_paste_your_token_here">Paste your token here</string>
     <string name="fragment_auth_token_invalid">Authentication failed, please try again</string>
 
-    <string name="upload_channel_description">%1$s (%2$d views)</string>
+    <string name="channel_description">%1$s (%2$d views)</string>
 
     <string name="listview_item_video_thumbnail">Video Thumbnail</string>
     <string name="listview_item_video_status">(%1$s)</string>

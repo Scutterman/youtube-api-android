@@ -3,26 +3,10 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/activity_auth.xml" value="0.2793819655521783" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/activity_main.xml" value="0.18" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/fragment_auth.xml" value="0.2793819655521783" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/fragment_upload.xml" value="0.2793819655521783" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/listview_item_video.xml" value="0.2793819655521783" />
         <entry key="..\:/vcs/youtube-api-android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.3609375" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/drawable/ic_baseline_publish_24.xml" value="0.3609375" />
         <entry key="..\:/vcs/youtube-api-android/app/src/main/res/drawable/ic_launcher_background.xml" value="0.3609375" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/drawable/ic_menu.xml" value="0.3609375" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/activity_auth.xml" value="0.23143115942028986" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/activity_main.xml" value="0.42604166666666665" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/fragment_auth.xml" value="0.25" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/fragment_upload.xml" value="0.25" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/listview_item_profile.xml" value="0.42083333333333334" />
+        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/activity_main.xml" value="0.38354430379746834" />
         <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/listview_item_video.xml" value="0.2246376811594203" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/profile_add_fragment.xml" value="0.19157608695652173" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/layout/thumbnail_fragment.xml" value="0.1933876811594203" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/menu/activity_main_toolbar.xml" value="0.34479166666666666" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/menu/asdf.xml" value="0.409375" />
-        <entry key="..\:/vcs/youtube-api-android/app/src/main/res/menu/menu_activity_main_toolbar.xml" value="0.409375" />
         <entry key="..\:/vcs/youtube-api-android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.418974358974359" />
         <entry key="..\:/vcs/youtube-api-android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.418974358974359" />
       </map>
