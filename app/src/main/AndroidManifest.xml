@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="uk.co.cgfindies.youtubevogthumbnailcreator">
+    package="uk.co.cgfindies.youtubeAPIAndroidSample">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -17,13 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.YoutubeVogThumbnailCreator">
         <activity
-            android:name=".AuthActivity"
-            android:exported="false"
-            android:theme="@style/Theme.AppCompat.Dialog"
-            android:excludeFromRecents="true"
-            />
-        <activity
-            android:name=".MainActivity"
+            android:name="uk.co.cgfindies.youtubeAPIAndroidSample.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

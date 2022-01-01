@@ -1,5 +1,5 @@
 // Modified from https://github.com/ladrahul25/CoroutineAsyncTask/blob/master/app/src/main/java/com/example/background/CoroutinesAsyncTask.kt
-package uk.co.cgfindies.youtubevogthumbnailcreator
+package uk.co.cgfindies.youtubeAPIAndroidSample
 
 import android.util.Log
 import kotlinx.coroutines.*

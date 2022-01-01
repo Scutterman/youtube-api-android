@@ -1,10 +1,10 @@
 {
   "name": "functions",
   "version": "1.0.0",
-  "description": "Backend for Pansapia Youtube Manager",
+  "description": "Backend to authenticate an android app with the Youtube API",
   "main": "lib/index.js",
-  "repository": "https://github.com/Scutterman/youtube-vlog-thumbnail-creator.git",
-  "author": "Pansapia Creative",
+  "repository": "https://github.com/Scutterman/youtube-api-android.git",
+  "author": "scutterman",
   "license": "MIT",
   "private": false,
   "scripts": {

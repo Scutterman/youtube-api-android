@@ -1,50 +1,31 @@
-package uk.co.cgfindies.youtubevogthumbnailcreator
+package uk.co.cgfindies.youtubeAPIAndroidSample
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
-import android.content.pm.PackageManager
 import android.util.Log
 import android.view.View
-import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.StringRes
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.serialization.Serializable
 import org.json.JSONObject
+
+@Serializable
+data class AccessTokenResponse(
+    val access_token: String,
+    val expiry_date: Long,
+    val token_type: String,
+    val scope: String,
+    val refresh_token: String
+)
 
 class Utility {
     companion object {
         fun showMessage(activity: Activity, @StringRes messageId: Int) {
             val view = activity.findViewById<View>(android.R.id.content)
             Snackbar.make(view, messageId, Snackbar.LENGTH_LONG).show()
-        }
-
-        fun hasPermission(context: Context, permission: String): Boolean {
-            return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
-        }
-
-        fun getPermission(activity: Activity, contract: ActivityResultLauncher<String>, permission: String, message: String) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    activity,
-                    permission
-                )
-            ) {
-                val alertBuilder = AlertDialog.Builder(activity)
-                alertBuilder.setCancelable(true)
-                alertBuilder.setMessage(message)
-                alertBuilder.setPositiveButton(
-                    android.R.string.ok
-                ) { _, _ ->
-                    contract.launch(permission)
-                }
-                alertBuilder.show()
-            } else {
-                contract.launch(permission)
-            }
         }
 
         fun getAuthentication(context: Context, onComplete: (accessTokenResponse: AccessTokenResponse?) -> Unit) {

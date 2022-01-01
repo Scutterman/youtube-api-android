@@ -1,56 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true">
 
     <LinearLayout
+        android:id="@+id/auth"
         android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:minHeight="?attr/actionBarSize"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:titleTextColor="@android:color/white"
-            android:background="?attr/colorPrimary"
-            android:layout_weight="0"/>
-
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragment_container_view"
+            android:textAlignment="center"
+            android:text="@string/fragment_auth_complete_auth_instructions"
+            android:layout_weight="0"
+            />
+        <Button
+            android:id="@+id/auth_retry"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_height="wrap_content"
+            android:text="@string/fragment_auth_retry_authentication_button"
+            android:layout_weight="0"
+            />
+
+        <TextView
+            android:id="@+id/not_a_token"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:text="@string/fragment_auth_token_invalid"
+            android:layout_weight="0"
+            android:visibility="invisible"
+            />
 
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/drawer"
-        style="@style/Widget.Design.NavigationView"
+        android:id="@+id/results"
         android:layout_width="150dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn_add_profile"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/add_profile"
-            android:layout_weight="0"
-            />
+            android:layout_weight="0">
+            <Button
+                android:id="@+id/btn_upload_video"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/upload_video" />
+            <Button
+                android:id="@+id/btn_reset_credentials"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="@string/reset_credentials" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/upload_output"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"/>
         <ListView
-            android:id="@+id/profile_list"
+            android:id="@+id/video_list"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            />
+            android:orientation="vertical"/>
     </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

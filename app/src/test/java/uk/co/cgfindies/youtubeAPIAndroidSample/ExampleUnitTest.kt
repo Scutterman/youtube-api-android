@@ -1,4 +1,4 @@
-package uk.co.cgfindies.youtubevogthumbnailcreator
+package uk.co.cgfindies.youtubeAPIAndroidSample
 
 import org.junit.Test
 

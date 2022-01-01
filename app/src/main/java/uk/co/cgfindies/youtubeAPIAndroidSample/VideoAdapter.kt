@@ -1,4 +1,4 @@
-package uk.co.cgfindies.youtubevogthumbnailcreator
+package uk.co.cgfindies.youtubeAPIAndroidSample
 
 import android.content.Context
 import android.graphics.BitmapFactory
