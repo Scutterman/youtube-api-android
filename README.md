@@ -32,10 +32,10 @@ The user must be taken from the app, directed to a browser OAuth flow, and then 
 1. The app stores the credentials and uses them to perform an API requests
 1. Later, when the credentials pass the expiry date, the app sends the refresh token to your server, which makes an OAuth request to generate a new access token to send back to the app
 
-## Prerequisites
-- You must have NodeJS (https://nodejs.org) and the yarn package manager (https://classic.yarnpkg.com) installed
-
 ## Implementation
+
+### Notes
+This sample code uses some of the GCP products to host resources. There is a free trial and a free tier which should cover most use cases, but a very large volume of users may exhaust the free allowances and require payment.
 
 ### Glossary
 
@@ -76,6 +76,8 @@ If you intend to use the API Server included in this sample project, the followi
 1. Ensure the functions service account can access the secret by selecting the checkbox beside the secret you just created and then clicking `Add Principal`in the permissions box to the right so you can add the `Secret Manager Secret Accessor` role to the service account (if you don't know the service account, it is available in the function `Details` tab after you've deployed the function for the first time)
 
 ### Backend deployment
+Follow these steps to deploy the API server included in this sample project
+1. Ensure you have installed [NodeJS][nodejs] and the [Yarn Package Manager][yarn]
 1. Copy the `gcp/functions/src/config.sample.json` file to `gcp/functions/src/config.json`, but make no other changes for now
 1. Copy the `gcp/.firebaserc.sample` file to `gcp/.firebaserc` and add your GCP project id into it
 1. In a command line, go to the `gcp/functions` directory
@@ -114,11 +116,13 @@ For public use, you will need to provide the verification requested before relea
 
 [bug-report]: https://issuetracker.google.com/issues/35175143
 [default-channel-broken]: https://issuetracker.google.com/issues/35175143#comment6
+[no-oauth-webview]: https://developers.googleblog.com/2016/08/modernizing-oauth-interactions-in-native-apps.html
+[nodejs]: https://nodejs.org
+[yarn]: https://classic.yarnpkg.com
 [youtube-partner]: https://issuetracker.google.com/issues/35175143#comment15
-[no-oauth-webview]: https://www.google.com/url?q=https://developers.googleblog.com/2016/08/modernizing-oauth-interactions-in-native-apps.html&sa=D&usg=AOvVaw0cSF58W448s5zP1K8NotJw
 
 [consent-evidence]: https://stackoverflow.com/a/65936387/989477
-[console]: console.cloud.google.com
+[console]: https:console.cloud.google.com
 [console-apis]: https://console.cloud.google.com/apis/dashboard
 [console-apis-consent]: https://console.cloud.google.com/apis/credentials/consent
 [console-apis-credentials]: https://console.cloud.google.com/apis/api/youtube.googleapis.com/credentials
