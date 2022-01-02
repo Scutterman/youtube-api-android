@@ -28,6 +28,10 @@ class Utility {
             Snackbar.make(view, messageId, Snackbar.LENGTH_LONG).show()
         }
 
+        // fetch the authentication from the preferences database.
+        // If the access token has expired, we ask the API server to give us a new access token using our refresh token
+        // If the API server is unable to provide a new access token,
+        // we assume the credentials are no longer valid and send the user back through the OAuth Flow
         fun getAuthentication(context: Context, onComplete: (accessTokenResponse: AccessTokenResponse?) -> Unit) {
             val youtubePrefs = context.getSharedPreferences("youtube", Context.MODE_PRIVATE)
             val accessToken = youtubePrefs.getString("accessToken", null)
@@ -35,6 +39,7 @@ class Utility {
             val tokenType = youtubePrefs.getString("tokenType", null)
             val scope = youtubePrefs.getString("scope", null)
             val refreshToken = youtubePrefs.getString("refreshToken", null)
+            val requiresRefresh = youtubePrefs.getBoolean("requiresRefresh", false)
 
             if (accessToken == null || expiryDate < 0 || tokenType == null || scope == null || refreshToken == null) {
                 Log.i("GET_AUTHENTICATION", "One or more expected parameters is null, cannot construct AccessTokenResponse")
@@ -44,7 +49,7 @@ class Utility {
 
             val time = System.currentTimeMillis()
             Log.i("GET_AUTHENTICATION", "Access token expires at $expiryDate, current time is $time")
-            if (expiryDate >= time) {
+            if (expiryDate >= time && !requiresRefresh) {
                 Log.i("GET_AUTHENTICATION", "Token still valid, returning AccessTokenResponse")
                 onComplete(
                     AccessTokenResponse(
@@ -58,6 +63,7 @@ class Utility {
                 return
             }
 
+            // The access token needs refreshing, so ask the API Server to do that
             val url = context.getString(R.string.auth_api_url)
             val body =  JSONObject(mapOf((Pair("refreshToken", refreshToken))))
 
@@ -69,10 +75,18 @@ class Utility {
                     val refreshedAccessToken = response?.getString("token")
                     if (refreshedAccessToken == null) {
                         Log.i("GET_AUTHENTICATION", "New access token is null")
+
+                        // Nuclear approach.
+                        // If the access token refresh failed, it's probably the refresh token is no longer valid.
+                        // This can happen if the user revokes access to the app.
+                        // Assume this is the case, and remove stored credentials
+                        resetCredentials(context)
+
                         onComplete(null)
                     } else {
                         youtubePrefs.edit()
                             .putString("accessToken", refreshedAccessToken)
+                            .putBoolean("requiresRefresh", false)
                             .apply()
 
                         Log.i("GET_AUTHENTICATION", "Stored new access token and returning AccessTokenResponse object")
@@ -89,6 +103,7 @@ class Utility {
             queue.add(authRequest)
         }
 
+        // Store OAuth credentials in a preferences database for later use
         fun setAuthentication(auth: AccessTokenResponse, context: Context) {
             val youtubePrefs = context.getSharedPreferences("youtube", Context.MODE_PRIVATE)
             youtubePrefs.edit()
@@ -97,9 +112,21 @@ class Utility {
                 .putString("tokenType", auth.token_type)
                 .putString("scope", auth.scope)
                 .putString("refreshToken", auth.refresh_token)
+                .putBoolean("requiresRefresh", false)
                 .apply()
         }
 
+        // Signal that the access token has expired and requires a refresh
+        fun setRequiresRefresh(context: Context) {
+            val youtubePrefs = context.getSharedPreferences("youtube", Context.MODE_PRIVATE)
+            youtubePrefs.edit()
+                .putBoolean("requiresRefresh", true)
+                .apply()
+        }
+
+        // Revoke the credentials.
+        // Useful if the user wishes to log out
+        // or if the token has been refreshed and is still returning 401 responses
         fun resetCredentials(context: Context) {
             val youtubePrefs = context.getSharedPreferences("youtube", Context.MODE_PRIVATE)
             youtubePrefs.edit()
@@ -108,6 +135,7 @@ class Utility {
                 .remove("tokenType")
                 .remove("scope")
                 .remove("refreshToken")
+                .remove("requiresRefresh")
                 .apply()
         }
     }

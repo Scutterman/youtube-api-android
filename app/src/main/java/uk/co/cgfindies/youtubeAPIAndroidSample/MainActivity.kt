@@ -35,10 +35,15 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super<AppCompatActivity>.onCreate(savedInstanceState)
+
+        // This is important for when the user is returning from the OAuth flow
         tokenId = savedInstanceState?.getString("tokenId")
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+
+        // Set up the view
         setContentView(R.layout.activity_main)
 
+        /** Button Listeners **/
         val retry = findViewById<Button>(R.id.auth_retry)
         retry.setOnClickListener {
             doAuth()
@@ -56,7 +61,11 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             Utility.resetCredentials(this)
             showAuth()
         }
+        /** End of button listeners **/
 
+        // When the user first arrives in the app, they won't have OAuth credentials
+        // In that case, we want to trigger the OAuth Flow immediately
+        // Otherwise, we want to show them the results
         Utility.getAuthentication(this) { auth ->
             if (auth == null) {
                 showAuth()
@@ -66,13 +75,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         }
     }
 
+    // Store the tokenId so we can access it in the bundle in `onCreate`
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("tokenId", tokenId)
         super.onSaveInstanceState(outState)
     }
 
+    // When the app returns to the foreground after the OAuth Flow, request the credentials from the API Server
     override fun onStart(owner: LifecycleOwner) {
-        // app moved to foreground
         Log.i("onStart", "Resuming: $tokenId")
         if (tokenId == null) {
             Log.i("onStart", "No token id, nothing to do")
@@ -107,6 +117,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         // app moved to background, no action required
     }
 
+    /** Helper functions to show / hide parts of the UI **/
     private fun showAuth() {
         findViewById<View>(R.id.not_a_token).visibility = View.GONE
         findViewById<View>(R.id.results).visibility = View.GONE
@@ -115,7 +126,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     private fun showResults() {
-        Log.i("onStart", "Resuming: $tokenId")
         findViewById<View>(R.id.auth).visibility = View.GONE
         findViewById<View>(R.id.results).visibility = View.VISIBLE
         showChannels()
@@ -129,6 +139,9 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         this.findViewById<TextView>(R.id.api_output).text = text
     }
 
+    /** End helper functions **/
+
+    // Set up an Adapter and hook it up to the video ListView
     private fun populateVideoList(videos: MutableList<PlaylistItem>) {
         val list = findViewById<ListView>(R.id.video_list)
         val videoAdapter = VideoAdapter(this, videos)
@@ -136,6 +149,8 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         Log.i("RESULTS", "Done populating video list")
     }
 
+    // Get the `tokenId` and redirect URL from the server, and open the browser with the URL
+    // When the user returns from the browser, the `onStart` method above is called and the auth continues from there
     private fun doAuth() {
         val url = getString(R.string.auth_api_url)
         val authRequest = JsonObjectRequest(Request.Method.GET, "$url/generateAuthUrl", null,
@@ -160,6 +175,8 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         queue.add(authRequest)
     }
 
+    // Display a list of channels the user has access to.
+    // Usually only one is returned since the OAuth credentials relate to a single channel
     private fun showChannels() {
         Log.i("YOUTUBE_API", "Showing channels")
         setOutputText("")
@@ -177,12 +194,17 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
                 setOutputText("Data retrieved using the YouTube Data API:\n\n" + TextUtils.join("\n\n", channelSummary))
 
+                // A bit of a hack here so we don't need to fetch channel playlists and search for the Uploads playlist id.
+                // Channel id seems to be the characters "UC" followed by an identifier.
+                // The playlist id for Uploads seems to be "UU" followed by that same identifier
+                // Therefore, to get the Uploads playlist id, strip the "UC" from the beginning of the channel id and add "UU" in its place
                 val playlistId = "UU" + channels[0].id.substring(2)
                 getPlaylistVideos(playlistId)
             }
         }
     }
 
+    // Perform an API request to fetch channels from the API
     private fun getChannelList(onResult: (List<Channel>?) -> Unit) {
         Log.i("YOUTUBE_API", "Performing channel list action")
         MakeRequestTask<List<Channel>>({ apiClient ->
@@ -197,6 +219,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         Log.i("YOUTUBE_API", "Executed channel list item")
     }
 
+    // Perform an API request to fetch and display the most recent videos in a playlist
     private fun getPlaylistVideos(playlistId: String) {
         Log.i("YOUTUBE_API", "Performing video list action")
         MakeRequestTask<List<PlaylistItem>>({ apiClient ->
@@ -223,6 +246,9 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     /**
      * An asynchronous task that handles the YouTube Data API call.
      * Placing the API calls in their own task ensures the UI stays responsive.
+     *
+     * The `HttpRequestInitializer` interface gives us access to the `initialize` method that the YouTube client calls before making a request
+     * This allows us to set a request interceptor on the request object, which we use to set our own api token in the Bearer header
      */
     private inner class MakeRequestTask<Result>
     constructor(private val fetchData: (apiClient: YouTube) -> Result, private val onResult: (result: Result?) -> Unit) :
@@ -238,11 +264,18 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         override fun doInBackground(vararg params: Void?): Result? {
             return try {
                 Log.i("YOUTUBE_API", "Setting up the api client")
+
+                // Stock objects required for the YouTube client
                 val transport = AndroidHttp.newCompatibleTransport()
                 val jsonFactory: JsonFactory = JacksonFactory.getDefaultInstance()
+
+                // The third parameter is important.
+                // It tells the YouTube client to call the `initialize` method of this class before each request
                 val apiClient = YouTube.Builder(transport, jsonFactory, this)
                     .setApplicationName("YouTube API Android Sample")
                     .build()
+
+                // `fetchData` is a method passed in that uses the YouTube client to perform an API request
                 Log.i("YOUTUBE_API", "Trying to get the data")
                 fetchData(apiClient)
             } catch (e: Exception) {
@@ -252,6 +285,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             }
         }
 
+        // Before doInBackground is called, fetch the credentials
         override suspend fun onPreExecute(): Unit = suspendCoroutine { cont ->
             Log.i("YOUTUBE_API", "Pre execute")
             Utility.getAuthentication(this@MainActivity) { auth ->
@@ -284,9 +318,11 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
                 return
             }
 
+            // By this point, we should have valid OAuth credentials. If not, something went wrong.
             Log.i("YOUTUBE_API", "Checking the auth")
             val auth = this.auth ?: throw Exception("Set authentication before running a request")
 
+            // The RequestHandler class handles adding the credentials to the request
             Log.i("YOUTUBE_API", "Setting request handler")
             val handler = RequestHandler(auth)
             request.interceptor = handler
@@ -298,6 +334,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     private inner class RequestHandler (val auth: AccessTokenResponse) : HttpExecuteInterceptor,
         HttpUnsuccessfulResponseHandler {
 
+        // Set the authorization header using the OAuth credentials access token
         override fun intercept(request: HttpRequest) {
             Log.i("YOUTUBE_API", "Intercepted the request, adding an access token")
             request.headers.authorization = "Bearer ${ auth.access_token }"
@@ -307,8 +344,12 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             request: HttpRequest, response: HttpResponse, supportsRetry: Boolean
         ): Boolean {
             Log.i("YOUTUBE_API", "Request failed with the status" + response.statusCode.toString())
-            // TODO:: If the response was 401, mark the credentials as needing refreshing.
-            // If the refresh doesn't work, the credentials should be removed and the user will need to re-authenticate.
+            // If the response was 401, mark the credentials as needing refreshing.
+            // If the refresh token is no longer valid,
+            // the API Server will not be able to return an access token and the user will be prompted to authenticate again
+            if (response.statusCode == 401) {
+                Utility.setRequiresRefresh(this@MainActivity)
+            }
             return false
         }
     }
