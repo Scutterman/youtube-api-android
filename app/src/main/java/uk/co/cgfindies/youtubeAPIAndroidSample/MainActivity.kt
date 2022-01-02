@@ -307,8 +307,8 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             request: HttpRequest, response: HttpResponse, supportsRetry: Boolean
         ): Boolean {
             Log.i("YOUTUBE_API", "Request failed with the status" + response.statusCode.toString())
-            // If the response was 401, the problem should be solved by the user retrying
-            // Otherwise, we can't fix it anyway
+            // TODO:: If the response was 401, mark the credentials as needing refreshing.
+            // If the refresh doesn't work, the credentials should be removed and the user will need to re-authenticate.
             return false
         }
     }
