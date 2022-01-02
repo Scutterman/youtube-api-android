@@ -7,6 +7,15 @@ import { Credentials } from 'googleapis-common/node_modules/google-auth-library'
 
 admin.initializeApp()
 
+interface GenerateAuthUrlResponse {
+  url: string
+  tokenId: string
+}
+
+interface RefreshTokenResponse {
+  token: string
+}
+
 enum StoredTokenStatus {
   PENDING_AUTH = 'PENDING_AUTH',
   HAS_AUTH = 'HAS_AUTH'
@@ -59,114 +68,13 @@ async function getApiKey(): Promise<string> {
 export const youtubeRestApi = functions.https.onRequest(async (request, response) => {
   try {
     if (request.path === '/generateAuthUrl') {
-      const oauth2Client = new auth.OAuth2(
-        config.clientId,
-        await getApiKey(),
-        config.apiBaseUrl + '/tokenResponse'
-      )
-
-      const scopes = [
-        'https://www.googleapis.com/auth/youtube.readonly',
-        'https://www.googleapis.com/auth/youtube.upload'
-      ]
-
-      const doc = await tokenTemporaryStorage().add({
-        status: StoredTokenStatus.PENDING_AUTH,
-        tokens: null
-      })
-
-      const url = oauth2Client.generateAuthUrl({
-        // offline means include the refresh_token
-        access_type: 'offline',
-        prompt: 'consent',
-        scope: scopes,
-        state: doc.id
-      })
-
-      response.send({
-        url,
-        tokenId: doc.id
-      })
+      await generateAuthUrl(response)
     } else if (request.path === '/tokenResponse') {
-      const error = request.query['error'] as string | undefined
-      const code = request.query['code'] as string | undefined
-      const state = request.query['state'] as string | undefined
-
-      if (error != null) {
-        functions.logger.error('Error in authentication', error, request.query)
-        response.status(401).send('401: ' + error)
-        return
-      } else if (code == null) {
-        functions.logger.error('No code returned from api', request.query)
-        response.sendStatus(401)
-        return
-      } else if (state == null) {
-        functions.logger.error('No state returned from api', request.query)
-        response.sendStatus(401)
-        return
-      }
-
-      const doc = await tokenTemporaryStorage().doc(state).get()
-      const data = doc.data()
-      if (!doc.exists || data == null) {
-        functions.logger.error('Invalid state', state)
-        response.sendStatus(401)
-        return
-      }
-
-      const oauth2Client = new auth.OAuth2(config.clientId, await getApiKey(), config.apiBaseUrl + '/tokenResponse')
-      const { tokens } = await oauth2Client.getToken(code)
-
-      try {
-        await doc.ref.update({ status: StoredTokenStatus.HAS_AUTH, tokens } as Partial<StoredToken>)
-      } catch (e) {
-        functions.logger.error('Could not update the doc', e)
-        response.sendStatus(401)
-        return
-      }
-
-      response.send('<html><body>Authentication successful. Close this window and return to the application</body></html>')
+      await tokenResponse(request, response)
     } else if (request.path === '/getStoredToken') {
-      const tokenId = request.query['tokenId'] as string | undefined
-      if (tokenId == null) {
-        functions.logger.error('Token id required in order to fetch stored token', request.query)
-        response.sendStatus(401)
-        return
-      }
-
-      const doc = await tokenTemporaryStorage().doc(tokenId).get()
-      const data = doc.data()
-      if (!doc.exists || data == null) {
-        functions.logger.error('No token data available', tokenId)
-        response.sendStatus(401)
-        return
-      }
-
-      if (data.status !== StoredTokenStatus.HAS_AUTH || data.tokens == null) {
-        functions.logger.error('No token available', data.status)
-        response.sendStatus(401)
-        return
-      }
-
-      // We don't want to keep tokens once they've been requested once.
-      await doc.ref.delete()
-
-      response.send(data.tokens)
+      await getStoredToken(request, response)
     } else if (request.path === '/refreshToken') {
-      const refreshToken = request.body.refreshToken as string | undefined
-      if (refreshToken == null) {
-        functions.logger.error('refresh token is missing', request.body)
-        response.sendStatus(401)
-        return
-      }
-
-      const oauth2Client = new auth.OAuth2(config.clientId, await getApiKey(), config.apiBaseUrl + '/tokenResponse')
-      oauth2Client.setCredentials({
-        refresh_token: refreshToken
-      })
-
-      const { token } = await oauth2Client.getAccessToken()
-      response.send({ token })
+      await refreshToken(request, response)
     } else {
       response.sendStatus(404)
     }
@@ -175,3 +83,126 @@ export const youtubeRestApi = functions.https.onRequest(async (request, response
     response.sendStatus(500)
   }
 })
+
+async function generateAuthUrl(response: functions.Response<GenerateAuthUrlResponse>): Promise<void> {
+  const oauth2Client = new auth.OAuth2(
+    config.clientId,
+    await getApiKey(),
+    config.apiBaseUrl + '/tokenResponse'
+  )
+
+  const scopes = [
+    'https://www.googleapis.com/auth/youtube.readonly',
+    'https://www.googleapis.com/auth/youtube.upload'
+  ]
+
+  const doc = await tokenTemporaryStorage().add({
+    status: StoredTokenStatus.PENDING_AUTH,
+    tokens: null
+  })
+
+  const url = oauth2Client.generateAuthUrl({
+    // offline means include the refresh_token
+    access_type: 'offline',
+    prompt: 'consent',
+    scope: scopes,
+    state: doc.id
+  })
+
+  response.send({
+    url,
+    tokenId: doc.id
+  })
+}
+
+async function tokenResponse(request: functions.https.Request, response: functions.Response<string>): Promise<void> {
+  const error = request.query['error'] as string | undefined
+  const code = request.query['code'] as string | undefined
+  const state = request.query['state'] as string | undefined
+
+  if (error != null) {
+    functions.logger.error('Error in authentication', error, request.query)
+    response.status(401).send('401: ' + error)
+    return
+  } else if (code == null) {
+    functions.logger.error('No code returned from api', request.query)
+    response.sendStatus(401)
+    return
+  } else if (state == null) {
+    functions.logger.error('No state returned from api', request.query)
+    response.sendStatus(401)
+    return
+  }
+
+  const doc = await tokenTemporaryStorage().doc(state).get()
+  const data = doc.data()
+  if (!doc.exists || data == null) {
+    functions.logger.error('Invalid state', state)
+    response.sendStatus(401)
+    return
+  }
+
+  const oauth2Client = new auth.OAuth2(config.clientId, await getApiKey(), config.apiBaseUrl + '/tokenResponse')
+  const { tokens } = await oauth2Client.getToken(code)
+
+  try {
+    await doc.ref.update({ status: StoredTokenStatus.HAS_AUTH, tokens } as Partial<StoredToken>)
+  } catch (e) {
+    functions.logger.error('Could not update the doc', e)
+    response.sendStatus(401)
+    return
+  }
+
+  response.send('<html><body>Authentication successful. Close this window and return to the application</body></html>')
+}
+
+async function getStoredToken(request: functions.https.Request, response: functions.Response<Credentials>): Promise<void> {
+  const tokenId = request.query['tokenId'] as string | undefined
+  if (tokenId == null) {
+    functions.logger.error('Token id required in order to fetch stored token', request.query)
+    response.sendStatus(401)
+    return
+  }
+
+  const doc = await tokenTemporaryStorage().doc(tokenId).get()
+  const data = doc.data()
+  if (!doc.exists || data == null) {
+    functions.logger.error('No token data available', tokenId)
+    response.sendStatus(401)
+    return
+  }
+
+  if (data.status !== StoredTokenStatus.HAS_AUTH || data.tokens == null) {
+    functions.logger.error('No token available', data.status)
+    response.sendStatus(401)
+    return
+  }
+
+  // We don't want to keep tokens once they've been requested once.
+  await doc.ref.delete()
+
+  response.send(data.tokens)
+}
+
+async function refreshToken(request: functions.https.Request, response: functions.Response<RefreshTokenResponse>): Promise<void> {
+  const refreshToken = request.body.refreshToken as string | undefined
+  if (refreshToken == null) {
+    functions.logger.error('Refresh token is missing', request.body)
+    response.sendStatus(401)
+    return
+  }
+
+  const oauth2Client = new auth.OAuth2(config.clientId, await getApiKey(), config.apiBaseUrl + '/tokenResponse')
+  oauth2Client.setCredentials({
+    refresh_token: refreshToken
+  })
+
+  const { token } = await oauth2Client.getAccessToken()
+  if (token == null) {
+    functions.logger.error('No token returned from api')
+    response.sendStatus(401)
+    return
+  }
+
+  response.send({ token })
+}
